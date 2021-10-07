@@ -6,15 +6,20 @@
   > header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
 
     h1 {
       color: #fff;
     }
 
+    span {
+      color: #fff;
+      margin-left: 1rem;
+    }
+
     > div {
       display: flex;
       align-items: center;
+      margin-left: auto;
 
       button {
         margin-right: 1rem;
@@ -142,4 +147,11 @@
       }
     }
   }
+}
+
+.userNotFound {
+  margin-top: 10rem;
+  text-align: center;
+
+  color: #fff;
 }

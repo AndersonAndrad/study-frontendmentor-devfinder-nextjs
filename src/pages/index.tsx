@@ -3,6 +3,7 @@ import { BsBrightnessHigh, BsBrightnessHighFill, BsBuilding, BsFillPinMapFill, B
 import { ApiGitHub } from '../services/api.services'
 import style from '../styles/Home.module.scss'
 import { useState } from 'react'
+import { version } from '../../package.json'
 
 type UserInformation = {
   photoUrl: string
@@ -16,6 +17,7 @@ type UserInformation = {
   updatedAt: string
   profileUrl: string
   twitterUserName: string
+  blog: string
 }
 
 type ResponseGitHubUserInformation = {
@@ -31,6 +33,7 @@ type ResponseGitHubUserInformation = {
     followers: number
     following: number
     html_url: string
+    blog: string
   }
 }
 
@@ -38,6 +41,7 @@ export default function Home () {
   const [light, setLight] = useState( false )
   const [userName, setUserName] = useState( '' )
   const [userInformation, setUserInformation] = useState<UserInformation>( {} as UserInformation )
+  const [userNotFound, setUserNotFound] = useState( false )
 
   async function handleGetUserInformation () {
     await ApiGitHub.get( `/users/${userName}` ).then( ( { data }: ResponseGitHubUserInformation ) => {
@@ -52,12 +56,17 @@ export default function Home () {
         following: data.following,
         updatedAt: new Date( data.updated_at ).toLocaleDateString( 'eng-US', { day: '2-digit', month: 'long', year: 'numeric' } ),
         profileUrl: data.html_url,
-        twitterUserName: data.twitter_username
+        twitterUserName: data.twitter_username,
+        blog: data.blog
       }
 
-      console.log( userInformationFormatted )
-
+      setUserNotFound( false )
       setUserInformation( userInformationFormatted )
+
+    } ).catch( () => {
+
+      setUserNotFound( true )
+
     } )
   }
 
@@ -69,6 +78,7 @@ export default function Home () {
     <div className={style.container}>
       <header>
         <h1>DevFinder</h1>
+        <span>{version}</span>
         <div>
           <button onClick={handleOnChangeTheme}>Light</button>
           {light ? <BsBrightnessHigh size={24} /> : <BsBrightnessHighFill size={24} />}
@@ -76,11 +86,11 @@ export default function Home () {
       </header>
       <section className={style.searchContent}>
         <BsSearch size={24} />
-        <input type="text" placeholder='Search GitHub username...' value={userName} onChange={event => { setUserName( event.target.value ) }} />
+        <input type="text" placeholder='Search GitHub username...' value={userName} onChange={event => { setUserName( event.target.value ) }} onKeyDown={event => { event.key === 'Enter' && handleGetUserInformation() }} />
         <button onClick={handleGetUserInformation}>Search</button>
       </section>
       {
-        userInformation.name && (
+        userInformation.name && userNotFound === false ? (
           <div className={style.content}>
             <div >
               <img src={userInformation.photoUrl} alt={userInformation.profileUrl} />
@@ -91,7 +101,7 @@ export default function Home () {
                   <h2>{userInformation.name}</h2>
                   {userInformation.updatedAt}
                 </section>
-                <h3>something</h3>
+                <h3>{userInformation.blog ? userInformation.blog : 'No blog'}</h3>
                 <p>{userInformation.bio}</p>
               </header>
               <table>
@@ -115,10 +125,14 @@ export default function Home () {
                 <span><BsLink45Deg />  <a href={userInformation.profileUrl} target="_blank" rel="noreferrer">{userInformation.profileUrl}</a></span>
               </div>
               <div className={style.links}>
-                <span><BsTwitter />  {userInformation.twitterUserName ? userInformation.twitterUserName : 'Not profile'}</span>
+                <span><BsTwitter />  {userInformation.twitterUserName ? userInformation.twitterUserName : 'No profile'}</span>
                 <span><BsBuilding />  {userInformation.company}</span>
               </div>
             </div>
+          </div>
+        ) : (
+          <div className={style.userNotFound}>
+            <h2>No user found</h2>
           </div>
         )
       }
