@@ -1,11 +1,65 @@
-import { useState } from 'react'
 import { BsBrightnessHigh, BsBrightnessHighFill, BsBuilding, BsFillPinMapFill, BsLink45Deg, BsSearch, BsTwitter } from 'react-icons/bs'
-import style from '../styles/Home.module.scss'
 
+import { ApiGitHub } from '../services/api.services'
+import style from '../styles/Home.module.scss'
+import { useState } from 'react'
+
+type UserInformation = {
+  photoUrl: string
+  company: string
+  location: string
+  name: string
+  bio: string
+  quantityRepositories: number
+  followers: number
+  following: number
+  updatedAt: string
+  profileUrl: string
+  twitterUserName: string
+}
+
+type ResponseGitHubUserInformation = {
+  data: {
+    avatar_url: string
+    company: string
+    location: string
+    name: string
+    bio: string
+    public_repos: number
+    updated_at: string
+    twitter_username: string
+    followers: number
+    following: number
+    html_url: string
+  }
+}
 
 export default function Home () {
-  const date = String( new Date().toLocaleDateString() )
   const [light, setLight] = useState( false )
+  const [userName, setUserName] = useState( '' )
+  const [userInformation, setUserInformation] = useState<UserInformation>( {} as UserInformation )
+
+  async function handleGetUserInformation () {
+    await ApiGitHub.get( `/users/${userName}` ).then( ( { data }: ResponseGitHubUserInformation ) => {
+      const userInformationFormatted: UserInformation = {
+        photoUrl: data.avatar_url,
+        company: data.company,
+        location: data.location,
+        name: data.name,
+        bio: data.bio,
+        quantityRepositories: data.public_repos,
+        followers: data.followers,
+        following: data.following,
+        updatedAt: new Date( data.updated_at ).toLocaleDateString( 'eng-US', { day: '2-digit', month: 'long', year: 'numeric' } ),
+        profileUrl: data.html_url,
+        twitterUserName: data.twitter_username
+      }
+
+      console.log( userInformationFormatted )
+
+      setUserInformation( userInformationFormatted )
+    } )
+  }
 
   function handleOnChangeTheme () {
     setLight( !light )
@@ -22,48 +76,52 @@ export default function Home () {
       </header>
       <section className={style.searchContent}>
         <BsSearch size={24} />
-        <input type="text" placeholder='Search GitHub username...' />
-        <button>Search</button>
+        <input type="text" placeholder='Search GitHub username...' value={userName} onChange={event => { setUserName( event.target.value ) }} />
+        <button onClick={handleGetUserInformation}>Search</button>
       </section>
-      <div className={style.content}>
-        <div >
-          <img src="https://i.stack.imgur.com/frlIf.png" alt="" />
-        </div>
-        <div className={style.userInformation}>
-          <header>
-            <section>
-              <h2>Anderson Andrade</h2>
-              {date}
-            </section>
-            <h3>something</h3>
-            <p>this profile has no bio</p>
-          </header>
-          <table>
-            <thead>
-              <tr>
-                <th>Repositories</th>
-                <th>Followers</th>
-                <th>Following</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>10</td>
-                <td>10</td>
-                <td>10</td>
-              </tr>
-            </tbody>
-          </table>
-          <div className={style.links}>
-            <span><BsFillPinMapFill />  Brazil</span>
-            <span><BsLink45Deg />  Brazil</span>
+      {
+        userInformation.name && (
+          <div className={style.content}>
+            <div >
+              <img src={userInformation.photoUrl} alt={userInformation.profileUrl} />
+            </div>
+            <div className={style.userInformation}>
+              <header>
+                <section>
+                  <h2>{userInformation.name}</h2>
+                  {userInformation.updatedAt}
+                </section>
+                <h3>something</h3>
+                <p>{userInformation.bio}</p>
+              </header>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Repositories</th>
+                    <th>Followers</th>
+                    <th>Following</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>{userInformation.quantityRepositories}</td>
+                    <td>{userInformation.followers}</td>
+                    <td>{userInformation.following}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div className={style.links}>
+                <span><BsFillPinMapFill /> {userInformation.location}</span>
+                <span><BsLink45Deg />  <a href={userInformation.profileUrl} target="_blank" rel="noreferrer">{userInformation.profileUrl}</a></span>
+              </div>
+              <div className={style.links}>
+                <span><BsTwitter />  {userInformation.twitterUserName ? userInformation.twitterUserName : 'Not profile'}</span>
+                <span><BsBuilding />  {userInformation.company}</span>
+              </div>
+            </div>
           </div>
-          <div className={style.links}>
-            <span><BsTwitter />  Brazil</span>
-            <span><BsBuilding />  Brazil</span>
-          </div>
-        </div>
-      </div>
+        )
+      }
     </div>
   )
 }

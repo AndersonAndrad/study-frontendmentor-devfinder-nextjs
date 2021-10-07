@@ -128,6 +128,14 @@
       padding: 2rem;
 
       span {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+
+        a {
+          color: #fff;
+        }
+
         & + span {
           margin-left: 2rem;
         }
