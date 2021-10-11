@@ -61,6 +61,7 @@ export default function Home () {
       }
 
       setUserNotFound( false )
+      setUserName( '' )
       setUserInformation( userInformationFormatted )
 
     } ).catch( () => {
